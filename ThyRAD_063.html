@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThyRAD - Thyroid Radioactive Decay Prediction Tool</title>
+
+<!-- CSS -->
+<link rel="stylesheet" href="css/style.css">
+
+<!-- Library -->
+<script src="libs/jquery-3.5.1.min.js"></script>
+<script src="libs/mathjax-tex-mml-chtml.js"></script>
+<script src="libs/plotly-2.24.1.min.js"></script>
+<script src="libs/jspdf.umd.min.js"></script>
+<script src="libs/jspdf.plugin.autotable.js"></script>
+
+</head>
+
+<body>
+   <!-- Fixed HEADER -->
+<header class="app-header-fixed">
+  <div class="header-title">ThyRAD</div>
+  <div class="menu-container" id="dotsMenuContainer">
+<button class="menu-dots-btn" id="dotsBtn">&#8942;</button>
+    <div class="menu-popup" id="dotsMenu">
+
+ <button class="menu-item">Settings</button>
+      <button class="menu-item"id="instructionMenuItem">Instructions</button>
+      
+      <button class="menu-item"id="aboutMenuItem">About</button>
+       <button class="menu-item" id="licenseMenuItem">License</button>
+      <button class="menu-item" id="contactMenuItem">Contact</button>   
+    </div>
+  </div>
+</header> 
+
+
+<!-- OVERLAY for Instruction -->
+  <div id="instructionsModal" class="cf-overlay">
+    <div class="cf-overlay-content">
+      
+  <h3>Instructions</h3>
+<ol>
+  <li>
+    <strong><sup>131</sup>I therapy<br>
+    </strong> Enter the administered activity (in mCi).
+  </li>
+  <br>
+  <li>
+    <strong>A<sub>1</sub>(t<sub>1</sub>)<br>
+    </strong>Set the initial activity at time t<sub>1</sub>
+  </li>
+  <br>
+  <li>
+    <strong>A<sub>2</sub>(t<sub>2</sub>)<br>
+    </strong>Set the second activity at time t<sub>2</sub> 
+   </li>
+  <br> 
+  <li>
+   <strong>Predictive findings<br>
+   </strong> The program will then compute the decay constant λ and t<sub>1/2</sub> from t<sub>1</sub> &rarr; t<sub>2</sub> (&#9762;), the decay table (&#9776;), the time activity curve (TAC) and (by clicking AUC) the area under the curve along with the time required for patient radioactivity to drop below a preselected threshold (30 μSv/h, as default). 
+ </li>
+<br>
+  
+  <li>
+    <strong><span>&#128100;</span><br>
+    </strong> To fully exploit the program, input all the patient's clinical data. Then, in Settings, provide the <em>Institution Name</em> (mandatory) 
+	and select the statistical method to be use to show the time required for patient radioactivity to drop below 30 μSv/h with 
+	(but depend of the method selected) its 95% confidence interval. 
+  </li>
+  <br>
+  <li>
+    <strong>A<sub>x</sub> (t<sub>x</sub>)</strong> Adding further activity values after A<sub>2</sub>(t<sub>2</sub>) allows for measured data 
+	to be compared with predicted values.
+  </li>
+  <br>
+  <li>
+  <strong>ThySAFE Module<br></strong> Optionally, this module calculates how long a patient should remain away from adults or children (based on 2-meter measurements), 
+  according to clinical practice adopted at the Nuclear Medicine Department of Santa Maria della Misericordia University Hospital, and based on the recommendations 
+  provided by the local medical physicist (updated as of October 2025). 
+  It is recommended to follow only the guidelines issued by the medical physicists of one's own institution.
+  
+  
+   
+  </li>
+  <br>
+  <li>
+    <strong>"Report .pdf"<br></strong> Generate and download a PDF summarizing the radiometabolic treatment.
+  </li>
+  <br>
+  <hr>
+  <br>
+  
+ <strong>Calculation Details</strong><br>
+The program uses a mono-exponential decay model to predict radioactive decay 
+from two activity values:<br><br>
+<strong>A(t) = A<sub>0</sub> * e<sup>-λt</sup></strong>
+where:<br>
+- <strong>A(t):</strong> Radioactivity at time t.<br>
+- <strong>A<sub>0</sub>:</strong> Initial radioactivity at time t = 0.<br>
+- <strong>λ:</strong> Decay constant.<br>
+- <strong>t:</strong> Time (in hours).<br><br>
+The decay constant λ is calculated using the first two measurements:<br><br>
+<strong>λ = (ln(A<sub>1</sub>/A<sub>2</sub>)) / (t<sub>2</sub> - t<sub>1</sub>)</strong><br>
+where:<br>
+- <strong>A<sub>1</sub> (t<sub>1</sub>):</strong> first activity at time t<sub>1</sub>.<br>
+- <strong>A<sub>2</sub> (t<sub>2</sub>):</strong> second activity at time t<sub>2</sub>.<br><br>
+The half-life is then calculated as:<br><br>
+<strong>t<sub>1/2</sub> = ln(2) / λ</strong><br><br>
+
+When more than two measurements are provided, the program uses a multi-segmented decay model for radioactive decay:<br><br>
+  <strong>A(t) = A<sub>i</sub> * e<sup>-λ<sub>i</sub>(t - t<sub>i</sub>)</sup></strong><br>
+  where for each time interval [t<sub>i</sub>, t<sub>i+1</sub>]:<br><br>
+  <strong>λ<sub>i</sub> = (ln(A<sub>i</sub>/A<sub>i+1</sub>)) / (t<sub>i+1</sub> - t<sub>i</sub>)</strong><br><br>
+  The half-life for each interval is:<br><br>
+  <strong>t<sub>1/2,i</sub> = ln(2) / λ<sub>i</sub></strong><br><br>
+  The final decay data is constructed by applying each λ<sub>i</sub> segment sequentially, ensuring accurate decay findings. 
+</ol>
+
+      <button id="closeinstructionsModal" class="cf-button-close">&#10006;</button>
+    </div>
+  </div>
+
+
+  <!-- OVERLAY for About -->
+  <div id="aboutModal" class="cf-overlay">
+    <div class="cf-overlay-content">
+      
+<p><strong>ThyRAD &copy; 2025 Garau LM</strong></p>   
+<p><strong>Thyroid Radioactive Decay Prediction Tool</strong></p>
+
+      <p>V. 0.63 (last update: 20/09/2025)</p>
+       
+      <button id="closeAboutModal" class="cf-button-close">&#10006;</button>
+    </div>
+  </div>
+
+
+ <!-- OVERLAY for License -->
+<div id="licenseModal" class="cf-overlay">
+    <div class="cf-overlay-content">
+  
+        <p><strong>Proper attribution and citation in the reference section is required in any scientific publication, report, or presentation where ThyRAD is used.</strong></p>
+        
+  <hr>
+     
+  <p><strong>Apache License 2.0</strong></p>
+<p>Copyright © 2025 Ludovico Maria Garau</p>
+<p>Licensed under the Apache License, Version 2.0 (the "License");  
+you may not use this file except in compliance with the License.  
+You may obtain a copy of the License at  
+<a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank">
+http://www.apache.org/licenses/LICENSE-2.0</a></p>    
+              
+  <hr>
+<p><strong>Third-party components:</strong></p>
+<ul>
+  <li>jQuery 3.5.1 — MIT, <a href="https://jquery.com/license/" target="_blank">license</a></li>
+  <li>MathJax 3 — Apache 2.0, <a href="https://github.com/mathjax/MathJax/blob/master/LICENSE" target="_blank">license</a></li>
+  <li>Plotly.js 2.24.1 — MIT, <a href="https://github.com/plotly/plotly.js/blob/master/LICENSE" target="_blank">license</a></li>
+  <li>jsPDF 2.5.1 — MIT, <a href="https://github.com/parallax/jsPDF/blob/master/LICENSE" target="_blank">license</a></li>
+  <li>jsPDF-Autotable 3.5.25 — MIT, <a href="https://github.com/simonbengtsson/jsPDF-AutoTable/blob/master/LICENSE.txt" target="_blank">license</a></li>
+</ul>     
+                
+      <button id="closeLicenseModal" class="cf-button-close">&#10006;</button>
+    </div>
+  </div>
+
+
+<!-- OVERLAY for Contact -->
+<div id="contactModal" class="cf-overlay">
+  <div class="cf-overlay-content">
+    <p>Ludovico Maria GARAU, MD, Nuclear Physician </p>
+    <p>ASUFC - S.M. della Misericordia</p>
+    <p>University Hospital</p>
+    <p>Udine, Italy</p>
+    <p>ludovico.garau@gmail.com</p>
+    <p><a href="https://orcid.org/0000-0001-5603-4689" target="_blank">ORCID</a></p>
+    <button id="closeContactModal" class="cf-button-close">&#10006;</button>
+  </div>
+</div> 
+
+<!-- OVERLAY SETTING -->
+<div id="settingsModal" class="cf-overlay">
+  <div class="cf-overlay-content">
+    <h2>Settings</h2>
+    
+ <!-- pro switch -->
+<form id="pro_settings">
+  <label for="proCode">
+    Switch to experimental Pro ThyRAD version:
+  </label>
+  <input type="text" id="proCode" placeholder="Enter the code">
+</form>
+<br> 
+The code to access the experimental PRO version is provided upon explicit request, 
+with justification, by contacting the email address listed in the "Contact" section.
+
+    <div class="pro-option">
+        
+    <form id="option_pdf">
+<label for="hospitalName">Institution Name:</label>
+    <input type="text" id="hospitalName" class="locked" placeholder="Institution/hospital name">
+    <br><br>
+   
+<label for="reportDate">Date of report:</label>
+    <input type="datetime-local" id="reportDate" class="datetime-input" class="locked" placeholder="yyyy-MM-ddThh:mm">
+    </form>
+    <br>
+    
+    <form id="option_pdf"> 
+    <label for="threshold">Threshold:</label>
+    <input type="text" id="threshold" class="locked" placeholder="μSv/h (30 μSv/h as default)">
+    <br>
+    </form>
+    <br>
+    
+    <form id="option_pdf"> 
+    <label for="previoustherapies">Previous therapies on PDF report:</label>
+    <label class="switch">
+      <input type="checkbox" id="previoustherapies" class="locked">
+      <span class="slider round"></span>
+    </label>
+    <br><br>
+
+    <label for="biformula_pdf">Decay formula on PDF report:</label>
+    <label class="switch">
+      <input type="checkbox" id="biformula_pdf" class="locked">
+      <span class="slider round"></span>
+    </label>
+    <br><br>
+
+    <label for="thysafe">Days of restriction on PDF report:</label>
+    <label class="switch">
+      <input type="checkbox" id="thysafe" class="locked">
+      <span class="slider round"></span>
+    </label>
+    <br><br>
+
+    <label for="longDecayTable">Long decay table on PDF report:</label>
+    <label class="switch">
+      <input type="checkbox" id="longDecayTable" class="locked">
+      <span class="slider round"></span>
+    </label>
+    <br><br>
+
+    <label for="shortDecayTable">Short decay table on PDF report:</label>
+    <label class="switch">
+      <input type="checkbox" id="shortDecayTable" class="locked">
+      <span class="slider round"></span>
+    </label>
+  </form>
+</div>
+<br>
+
+<!-- Statistics methods -->
+<div class="pro-option">
+  <form id="option_pdf_stats"> 
+    <label for="groupComparison_cutoff">Tg Group comparison (cutoff):</label>
+    <label class="switch">
+      <input type="checkbox" id="groupComparison_cutoff" class="locked">
+      <span class="slider round"></span>
+    </label>  
+    <br><br>   
+
+    <label for="groupComparison_quartiles">Tg Group comparison (quartiles):</label>
+    <label class="switch">
+      <input type="checkbox" id="groupComparison_quartiles" class="locked">
+      <span class="slider round"></span>
+    </label>  
+    <br><br>
+
+    <label for="abtg_cutoff">abTg Group comparison (cutoff):</label>
+    <label class="switch">
+      <input type="checkbox" id="abtg_cutoff" class="locked">
+      <span class="slider round"></span>
+    </label>
+  </form>
+</div>    
+<br>
+    
+    <div class="pro-option">
+<button id="saveSettings" class="locked cf-button-save">Save</button>    
+<button id="closeSettingsModal" class="cf-button-close">&#10006;</button>
+<br><br>
+</div>
+</div>
+</div>
+
+
+<div class="container">
+<!------------ COLUMN 1 -------------->
+  <div class="column1">
+      
+<!-- BUTTON SPECIAL CHARACTER -->
+    <button id="openCFModal" class="locked" class="cf-button">&#128100;</button>
+    <br><br>
+
+    
+<!-- OVERLAY PATIENT DATA -->
+    <div id="cfModal" class="cf-overlay">
+      <div class="cf-overlay-content">
+        <h2>Patient data</h2>
+
+   <div class="pro-option"> 
+        
+    <form id="anamnesiform"> 
+<label for="cfName">Name:</label>
+<input type="text" id="cfName" placeholder="Name">
+          <br><br>
+<label for="cfSurname">Surname:</label>
+          <input type="text" id="cfSurname" placeholder="Rossi">
+          <br><br>
+<label for="cfSex">Sex (M/F):</label>
+          <input type="text" id="cfSex" maxlength="1" placeholder="M">
+          <br><br>
+<label for="cfDate">DoB:</label>
+          <input type="date" id="cfDate">
+        </form>
+        </div>
+        <br>
+
+        <!-- Previous Treatments Section -->
+        <div class="pro-option">
+        <div id="previousTreatments">
+          <form id="anamnesiform" > 
+            <div id="treatmentList">
+              <!-- Treatment entries added here dynamically -->
+            </div>
+            <button id="addTreatment" class="cf-button_add_measurementsts">+ Add Treatment</button>
+            <br><br>
+            <label for="cumulative">Cumulative:</label>
+            <input type="number" id="cumulative" class="radioactivity-input" placeholder="mCi" step="any" readonly>
+          </form>         
+        </div> 
+        <br>
+        
+         <form id="anamnesiform_tg_abtg">   
+          <label for="tg">Thyroglobuline (stimulated):</label>
+          <input type="text" id="tg" placeholder="mg/dl">
+          <br><br>
+          
+         <label for="abtg">Ab-Thyroglobuline:</label>
+          <input type="text" id="abtg" placeholder="mg/dl"> 
+        </form>
+        
+        <br><br>
+       <button id="closeCFModal" class="cf-button-close">&#10006;</button>
+      </div>
+    </div>
+ </div>  
+    
+
+    <!-- Therapy Info to calculate decay -->
+   <label for="mci"><sup>131</sup>I
+   therapy:</label><br>
+    <input type="number" id="mci" class="radioactivity-input" placeholder="mCi" step="any">
+  </div>    
+  <br>
+
+  <!-- COLUMN 2 -->
+  <div class="column2">
+    <h4 style="text-align:center;">Input</h4>
+    <br>
+    <label for="initialDate">A<sub>1</sub> (t<sub>1</sub>):</label>
+    <div class="input-wrapper"> 
+      <input type="number" id="initialRadioactivity" class="radioactivity-input" 
+	  placeholder="Set the activity value" step="any">
+      &nbsp;
+      <input type="datetime-local" id="initialDate" class="datetime-input" 
+	  placeholder="yyyy-MM-ddThh:mm">
+    </div>
+
+    <label for="secondDate">A<sub>2</sub> (t<sub>2</sub>):</label>
+    <div class="input-wrapper">
+      <input type="number" id="remainingRadioactivity" class="radioactivity-input" 
+	  placeholder="Set the activity value" step="any">
+      &nbsp;
+      <input type="datetime-local" id="secondDate" class="datetime-input" 
+	  placeholder="yyyy-MM-ddThh:mm">
+    </div>  
+
+    <label for="tempo_trascorso">(t<sub>1</sub> &#8594 t<sub>2</sub>):</label><br>
+    <input type="number" id="tempo_trascorso" class="effective-automatic-input" 
+	placeholder="h" readonly>
+    <br><br>
+
+    <label for="effective1m">A<sub>3</sub> (t<sub>3</sub>):</label> 
+    <div class="input-wrapper">
+      <input type="number" id="effective1m" class="radioactivity-input" 
+	  placeholder="Set the activity value">
+      &nbsp;
+      <input type="datetime-local" id="realmeasure_date1" class="datetime-input" 
+	  placeholder="yyyy-MM-ddThh:mm">
+    </div>
+
+    <label for="second_to_realmeasure1">(t<sub>2</sub> &#8594 t<sub>3</sub>):</label> <br>
+    <input type="number" id="second_to_realmeasure1" class="effective-automatic-input" 
+	placeholder="h" readonly>
+    <br><br>
+
+    <label for="first_to_realmeasure1">(t<sub>1</sub> &#8594 t<sub>x</sub>):</label> <br>
+    <input type="number" id="first_to_realmeasure1" class="effective-automatic-input" 
+	placeholder="h" readonly>
+    <br><br>
+    
+    <div id="extraRealMeasurementsContainer">
+      
+    </div>
+    <button id="addExtraMeasBtn" class="cf-button_add_measurements">Add A<sub>n</sub> (t<sub>n</sub>)</button>
+  </div>
+  <br>
+
+  <!-- COLUMN 3 -->
+  <div class="column3">
+    <!-- MONOEX --> 
+    <h4 style="text-align:center;">Output</h4>
+    <h5>Mono-exponential based predictive values</h5>
+
+    <!-- Toggle panel-->
+    <button id="more_data">&#9762;</button>
+    <div id="innerinputContainer">
+        <br>
+      <label for="lambda">λ (t<sub>1</sub> &#8594 t<sub>2</sub>):</label><br>
+      <input type="number" id="lambda" class="main-automatic-input" step="any" readonly>
+      <br><br>
+
+      <label for="halfLife">t<sub>1/2</sub> (t<sub>1</sub> &#8594 t<sub>2</sub>):</label><br>
+      <input type="number" id="halfLife" class="main-automatic-input" readonly>
+      <br><br>
+
+      <label for="nfactor">Normalization factor:</label><br>
+      <input type="number" id="nfactor" class="main-automatic-input" value="1">
+      <br><br>
+
+      <label for="halfLifeh">t<sub>1/2</sub> (t<sub>2</sub> &#8594 t<sub>x</sub>) :</label><br>
+      <input type="number" id="halfLifeh" class="main-automatic-input" readonly>
+    </div>
+    <br><br>
+
+    <!--MONOEX TABLE -->
+    <button id="populate_button">&#9776;</button>
+    <table id="decayTable">
+      <thead>
+        <tr>
+          <th>Time (h)</th>
+          <th>Decay (μSv/h)</th>
+          <th>Therapy (mCi)</th>
+          <th>t1 (μSv/h)</th>
+          <th>Decay (mCi)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <br><br>
+
+    <!-- TAC MONOEX -->
+    <button id="tac">TAC</button>
+    <div id="plot"></div>
+    <br><br>
+    
+    <button id="hypodata">AUC</button>
+    <div id="innerinputContainer4">
+      <h5>Hypothesized limits and total administered activity</h5>
+      <div class="limits-and-graph-container">
+        <div class="limits-info">
+          <label for="valore1">&lt; Threshold (μSv/h), in about:</label><br>
+          <input type="number" id="valore1" class="main-limit" step="any" readonly>
+          <br>
+      <label for="predictionModel"></label><br>
+      <textarea id="predictionModel" class="biformula" readonly></textarea>
+      <br><br>
+          
+          <label for="valore2">&lt; 16 mCi, in about:</label><br>
+          <input type="number" id="valore2" class="main-limit" step="any" readonly>
+          <br><br>
+        </div>
+        <div class="graph-space"></div>
+      </div>
+
+      <label for="valore3">AUC: (μSv*h)</label><br>
+      <input type="number" id="valore3" class="main-automatic-input" step="any" readonly>
+      <br><br>
+    </div>
+    <hr>
+
+    <!-- MULTISEGM --> 
+    <h5>Multi-segmented based predictive values
+</h5>
+    <button id="more_data2">&#9762;</button>
+    <div id="innerinputContainer2">
+      <h5>Decay constant and halflife</h5>
+      <label for="lambda2">λ (t<sub>2</sub> &#8594 t<sub>3</sub>):</label><br>
+      <input type="number" id="lambda2" class="main-automatic-input" step="any" readonly>
+      <br><br>
+
+      <label for="halflife2"> t<sub>1/2</sub> (t<sub>2</sub>&#8594 t<sub>3) :</label><br>
+      <input type="number" id="halflife2" class="main-automatic-input" readonly>
+      <br><br>
+
+      <label for="lambdatot">λ (t<sub>1</sub> &#8594 t<sub>x</sub>)</label><br>
+      <input type="number" id="lambdatot" class="main-automatic-input" step="any" readonly>
+      <br><br>
+      
+      <label for="halflifetot">t<sub>1/2</sub> (t<sub>1</sub>&#8594 t<sub>x</sub>):</label><br>
+      <input type="number" id="halflifetot" class="main-automatic-input" step ="any" readonly>
+      <br><br>
+      
+      <label for="biformula">Formula:</label><br>
+      <textarea id="biformula" class="biformula" readonly></textarea>
+    </div>
+    <br><br>
+
+    <button id="populate_button2">&#9776;</button>
+    <table id="decayTable3">
+      <thead>
+        <tr>
+          <th>Time (h)</th>
+          <th>Decay (μSv/h)</th>
+          <th>Therapy (mCi)</th>
+          <th>t1 (μSv/h)</th>
+          <th>Decay (mCi)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <br><br>
+
+    <!-- TAC Multisegm vs Monoex -->
+    <button id="tac2">TAC</button>
+    <div id="thirdPlot"></div>
+    <br><br>
+    
+    <button id="realdata">AUC</button>
+    <div id="innerinputContainer5">
+      <h5>Real limits and total administered activity</h5>
+      <label for="real_limit_msv">&lt; Threshold (μSv/h), in about:</label><br>
+      <input type="number" id="real_limit_msv" class="main-limit2" step="any" readonly>
+      <br><br>
+
+      <label for="real_limit_mci">&lt; 16 mCi, in about:</label><br>
+      <input type="number" id="real_limit_mci" class="main-limit2" step="any" readonly>
+      <br><br>
+
+      <label for="valore4">AUC: (μSv*h):</label><br>
+      <input type="number" id="valore4" class="main-automatic-input" step="any" readonly>
+      <br><br>
+      <br><br>
+    </div>
+  </div>
+  <br>
+
+  <!-- COLUMN 4 -->
+  <div class="column4">
+    <button id="HvsReal">Δ</button>
+    <div id="innerinputContainer6">
+      <h5>Mono-exponential &Delta; Multi-exponential</h5>
+
+      <label for="difference1m">Δ-limit 30 μSv (h; %):</label>
+      <div class="input-wrapper">
+        <input type="number" id="difference1m" class="effective-automatic-input" readonly>
+        <input type="number" id="difference1m_perc" class="effective-automatic-input" readonly>
+      </div>
+
+      <label for="difference2m">Δ-limit 16 mCi (h; %):</label>
+      <div class="input-wrapper">
+        <input type="number" id="difference2m" class="effective-automatic-input" readonly>
+        <input type="number" id="difference2m_perc" class="effective-automatic-input" readonly>
+      </div>
+
+      <label for="valore5">Δ-AUC (μSv*h; %):</label>
+      <div class="input-wrapper">
+        <input type="number" id="valore5" class="effective-automatic-input" step="any" readonly>
+        <input type="number" id="valore6" class="effective-automatic-input" step="any" readonly>
+      </div>
+   <br>  
+        
+    </div>
+    <hr>
+
+    <!-- REPORTS AND THYSAFE BUTTONS -->
+    <div class="button-group">
+      <div class="left-buttons">
+        <button id="ThySAFE" class="locked">ThySAFE</button>
+
+       <!-- BUTTON Rec disabled
+        <button id="rec">&#9737;</button>
+      -->
+      
+      </div>
+      <div class="right-buttons">
+         <button id="report_pdf" class="locked">&#x1F4CB.pdf</button>
+      </div>
+    </div>
+
+    <!-- OVERLAY for ThySAFE -->
+    <div id="thySAFEModal" class="cf-overlay">
+      <div class="cf-overlay-content">
+        <h2>Protection Restriction Manager</h2>
+        <div class="thySAFE-container">
+          <!-- Restrictions without childrens (Adults) -->
+          <form id="calcForm1">
+            <h3>Adult safe</h3>
+            <label for="doseRate1">Exposure rate at 2 meters (uSv/h):</label>
+            <select id="doseRate1" name="doseRate" required></select>
+            <br>
+            <label for="hoursPassed1">Hours after administration (h):</label>
+            <select id="hoursPassed1" name="hoursPassed" required></select>
+            <br>
+            <button type="submit">Calculate</button>
+            <div id="result1" class="result"></div>
+          </form>
+          
+          <br>
+          <!-- Restrictions with childrens -->
+          <div class="container2">
+            <form id="calcForm2">
+              <h3>Children safe</h3>
+              <label for="doseRate2">Exposure rate at 2 meters (uSv/h):</label>
+              <select id="doseRate2" name="doseRate" required></select>
+              <br>
+              <label for="hoursPassed2">Hours after administration (h):</label>
+              <select id="hoursPassed2" name="hoursPassed" required></select>
+              <br>
+              <button type="submit">Calculate</button>
+            </form>
+            <div id="result2" class="result"></div>
+          </div>
+        </div>
+        <button id="closeThySAFEModal" class="cf-button-close">&#10006;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay Message -->
+<div id="overlayMessage" class="overlay-message">
+  <div class="overlay-content">
+    <p>Request and type the code in the setting menu to unlock the experimental pro features of ThyRAD</p>
+    <button id="closeOverlay" class="close-overlay">X</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="app-footer-fixed">
+  <p>ThyRAD &copy; 2025 Garau LM, MD, Nuclear Physician
+    <a href="https://orcid.org/0000-0001-5603-4689" target="_blank">ORCID</a>
+  </p>
+</footer>
+
+<!-- JAVASCRIPT -->
+<script src="js/app.js"></script>
+
+</body>
+</html>
