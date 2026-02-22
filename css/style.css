@@ -76,7 +76,7 @@ body {
 
 .cf-button_add_measurements {
   background: transparent;
-  color: #F4F4F4F;
+  color: #363636;
   font-size: 12px;
   cursor: pointer;
   border: 1px solid #3e3e3e;
@@ -95,28 +95,28 @@ body {
 
     .column1 {
         background-color: #f6f6f6;
-        border: 1px solid #3e3e3e;
+        border: 2px solid #3a3a3a;
         border-radius: 4px;
         padding: 10px;
     }
 
     .column2 {
         background-color: #f6f6f6;
-        border: 1px solid #545454;
+        border: 2px solid #3a3a3a;
         border-radius: 4px;
         padding: 10px;
     }
 
     .column3 {
         background-color: #f6f6f6;
-        border: 1px solid #545454;
+        border: 2px solid #1a5a8a;
         border-radius: 4px;
         padding: 10px;
     }
 
     .column4 {
         background-color: #e0e0e0;
-        border: 1px solid #3e3e3e;
+        border: 2px solid #1a5a8a;
         border-radius: 4px;
         padding: 10px;
     }
@@ -542,7 +542,38 @@ hr {
 #decayTable th, #decayTable td,
 #decayTable3 th, #decayTable3 td {
   width: 20%;
-  text-align: center; 
+  text-align: center;
+  padding: 4px;
+}
+
+/* Colonne Therapy (mCi) e t1 (μSv/h): usate solo per calcoli interni, nascoste visivamente */
+#decayTable th:nth-child(3), #decayTable td:nth-child(3),
+#decayTable th:nth-child(4), #decayTable td:nth-child(4),
+#decayTable3 th:nth-child(3), #decayTable3 td:nth-child(3),
+#decayTable3 th:nth-child(4), #decayTable3 td:nth-child(4) {
+  display: none;
+}
+
+#decayTable thead tr th,
+#decayTable3 thead tr th {
+  background-color: #3a3a3a;
+  color: #fff;
+  font-size: 11px;
+}
+
+#decayTable tbody tr:nth-child(even),
+#decayTable3 tbody tr:nth-child(even) {
+  background-color: #e8e8e8;
+}
+
+#decayTable tbody tr:nth-child(odd),
+#decayTable3 tbody tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+
+#decayTable tbody tr:hover,
+#decayTable3 tbody tr:hover {
+  background-color: #d0d0d0;
 }
 
 #plot, #thirdPlot {
@@ -551,6 +582,35 @@ hr {
   margin-bottom: 10px;
 }
 
+
+/*--------------------*/
+/* FUNCTIONAL BUTTONS */
+/* more_data, populate_button, tac, auc, HvsReal */
+/*--------------------*/
+#more_data, #more_data2,
+#populate_button, #populate_button2,
+#tac, #tac2,
+#hypodata, #realdata,
+#HvsReal {
+  background-color: transparent;
+  color: #3a3a3a;
+  border: 2px solid #3a3a3a;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+#more_data:hover, #more_data2:hover,
+#populate_button:hover, #populate_button2:hover,
+#tac:hover, #tac2:hover,
+#hypodata:hover, #realdata:hover,
+#HvsReal:hover {
+  background-color: #3a3a3a;
+  color: #fff;
+}
 
 /*--------------------*/
 /* Button of column4  */
@@ -581,9 +641,6 @@ hr {
 .left-buttons {
     display: flex;
     gap: 10px;
-}
-
-.right-buttons {
 }
 
 .right-buttons button:hover {
@@ -809,16 +866,16 @@ hr {
 /* UNLOCK PRO FEATURES */
 /*--------------------*/
 .overlay-message {
-  display: none; /* Nascondi l'overlay di default */
+  display: none; 
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7); /* Sfondo semi-trasparente */
+  background-color: rgba(0, 0, 0, 0.7); 
   color: white;
   text-align: center;
-  z-index: 9999; /* Assicurati che l'overlay sia sopra gli altri elementi */
+  z-index: 9999; 
   padding-top: 20%;
 }
 
@@ -826,13 +883,13 @@ hr {
   font-size: 20px;
   font-weight: bold;
   padding: 10px;
-  background-color: #111; /* Sfondo scuro per il messaggio */
+  background-color: #111; 
   border-radius: 10px;
   display: inline-block;
 }
 
 .close-overlay {
-  background-color: #f44336; /* Colore rosso per il pulsante di chiusura */
+  background-color: #f44336; 
   color: white;
   font-size: 16px;
   padding: 5px 10px;
@@ -855,4 +912,4 @@ hr {
 
 .pro-option.locked {
   opacity: 0.0;
-} 
+}
